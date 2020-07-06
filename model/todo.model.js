@@ -7,9 +7,10 @@ const TodoSchema = new mongoose.Schema({
   },
   done: {
     type: Boolean,
-    require: true,
+    required: true,
   },
 });
 
 const TodoModel = mongoose.model("Todo", TodoSchema);
+
 module.exports = TodoModel;
