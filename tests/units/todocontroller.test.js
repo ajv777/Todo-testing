@@ -6,6 +6,8 @@ const allTodos = require("../mock-data/all-todos.json");
 
 TodoModel.create = jest.fn();
 TodoModel.find = jest.fn();
+TodoModel.findById = jest.fn();
+
 // Before run each test: create a mock object with all the same methods that the original implementation
 let req, res, next;
 beforeEach(() => {
@@ -15,10 +17,35 @@ beforeEach(() => {
 });
 
 describe("TodoController.getTodoById", () => {
-  it("should have a getTodoById"),
-    () => {
-      expect(typeof TodoController.getTodoById).toBe("function");
-    };
+  it("should have a getTodoById", () => {
+    expect(typeof TodoController.getTodoById).toBe("function");
+  });
+  it("should call TodoModel.findById with route parameters", async () => {
+    req.params.todoId = "5e0a18e8a6029b47e4636e61";
+    await TodoController.getTodoById(req, res, next);
+    expect(TodoModel.findById).toBeCalledWith("5e0a18e8a6029b47e4636e61");
+  });
+  // req.params it not necessary for this test
+  it("should return json body and responde code 200", async () => {
+    TodoModel.findById.mockReturnValue(newTodo);
+    await TodoController.getTodoById(req, res, next);
+    expect(res.statusCode).toBe(200);
+    expect(res._getJSONData()).toStrictEqual(newTodo);
+    expect(res._isEndCalled()).toBeTruthy();
+  });
+  it("should do errors handling", async () => {
+    const errorMessage = { message: "error handing todoModel" };
+    const rejectedPromise = Promise.reject(errorMessage);
+    TodoModel.findById.mockReturnValue(rejectedPromise);
+    await TodoController.getTodoById(req, res, next);
+    expect(next).toBeCalledWith(errorMessage);
+  });
+  it("should return 404 when item doesnt exist", async () => {
+    TodoModel.findById.mockReturnValue(null);
+    await TodoController.getTodoById(req, res, next);
+    expect(res.statusCode).toBe(404);
+    expect(res._isEndCalled()).toBeTruthy();
+  });
 });
 
 describe("TodoController.getTodos", () => {
